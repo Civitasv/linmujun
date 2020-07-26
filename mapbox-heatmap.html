@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mapbox可视化之热力图</title>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.1/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.1/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+    <script>
+        $(function () {
+            mapboxgl.accessToken = 'pk.eyJ1IjoiY2l2aXRhc3YiLCJhIjoiY2s3YXBvdDU1MTZpdDNlcDVhb3FrbjdtaiJ9.kLk_w4wIjIQ6dunGULViqw';
+            var map = new mapboxgl.Map({
+                container: 'map', // container id
+                style: 'mapbox://styles/mapbox/dark-v9', // stylesheet location
+                center: [114, 38.54],
+                zoom: 3
+            });
+            map.on('load', function () {
+                // Add a geojson point source.
+                // Heatmap layers also work with a vector tile source.
+                map.addSource('virus-source', {
+                    "type": "geojson",
+                    "data": "data.json"
+                });
+                // 添加热力图图层
+                map.addLayer(
+                    {
+                        id: "virus-heatmap",
+                        type: "heatmap",
+                        source: "virus-source",
+                        paint: {
+                            // 使用new_diagnosis属性
+                            "heatmap-weight": [
+                                "interpolate",
+                                ["linear"],
+                                ["get", "new_diagnosis"],
+                                0,
+                                0,
+                                1000,
+                                1
+                            ],
+                            "heatmap-intensity": [
+                                "interpolate",
+                                ["linear"],
+                                ["zoom"],
+                                0,
+                                3,
+                                9,
+                                5
+                            ],
+                            // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+                            // Begin color ramp at 0-stop with a 0-transparancy color
+                            // to create a blur-like effect.
+                            "heatmap-color": [
+                                "interpolate",
+                                ["linear"],
+                                ["heatmap-density"],
+                                0,
+                                "rgba(0, 0, 0, 0)",
+                                0.1,
+                                "#927903",
+                                0.15,
+                                "#ffd403",
+                                1,
+                                "red"
+                            ],
+                            // Adjust the heatmap radius by zoom level
+                            "heatmap-radius": [
+                                "interpolate",
+                                ["linear"],
+                                ["zoom"],
+                                0,
+                                2,
+                                1,
+                                4,
+                                2,
+                                8,
+                                3,
+                                16,
+                                4,
+                                32,
+                                5,
+                                64,
+                                6,
+                                128,
+                                7,
+                                256,
+                                8,
+                                512,
+                                9,
+                                1024
+                            ],
+                            // Transition from heatmap to circle layer by zoom level
+                            "heatmap-opacity": [
+                                "interpolate",
+                                ["linear"],
+                                ["zoom"],
+                                5,
+                                0.95,
+                                6,
+                                0
+                            ]
+                        }
+                    }
+                );
+            })
+
+        })
+    </script>
+</head>
+
+<body>
+    <div id='map'></div>
+</body>
+
+</html>
